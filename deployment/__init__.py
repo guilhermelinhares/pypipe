@@ -98,5 +98,5 @@ class GenericDeployment:
         )
 
 
-teste1 = GenericDeployment()
-teste1.pipe()
+deployment = GenericDeployment()
+deployment.pipe()
