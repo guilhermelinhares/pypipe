@@ -5,10 +5,6 @@ import logger
 from docker.errors import BuildError
 
 
-def redeploy(secrets, tag_name, app_name_git):
-    pass
-
-
 def build(secrets, to_path, app_name_git, branch_tag):
     tag_name = app_name_git + ":" + branch_tag
     client = docker.from_env()
@@ -49,9 +45,10 @@ def redeployment(secrets, tag_name, app_name_git):
                                                   name=app_name_git,
                                                   environment=secrets)
                 process = container.logs(stream=True, follow=False)
-                print('Container Deployed..')
+
                 for line in process:
                     print(line)
+                return container.id
     except BuildError as e:
         print(e)
         raise Exception(e)
