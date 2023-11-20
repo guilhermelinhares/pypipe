@@ -5,6 +5,10 @@ import logger
 from docker.errors import BuildError
 
 
+def redeploy(secrets, tag_name, app_name_git):
+    pass
+
+
 def build(secrets, to_path, app_name_git, branch_tag):
     tag_name = app_name_git + ":" + branch_tag
     client = docker.from_env()
@@ -20,7 +24,9 @@ def build(secrets, to_path, app_name_git, branch_tag):
         for line in log:
             print(line)
         print('Done')
-        new_deploy = deploy(secrets, tag_name, app_name_git)
+        re_deploy = redeployment(secrets, tag_name, app_name_git)
+        if re_deploy is None:
+            deployment(secrets, tag_name, app_name_git)
     except BuildError as e:
         print("Hey something went wrong with image build!")
         for line in e.build_log:
@@ -29,7 +35,7 @@ def build(secrets, to_path, app_name_git, branch_tag):
         raise
 
 
-def deploy(secrets, tag_name, app_name_git):
+def redeployment(secrets, tag_name, app_name_git):
     client = docker.from_env()
     try:
         for container_check in client.containers.list(all=True, filters={"name": app_name_git}):
@@ -50,3 +56,20 @@ def deploy(secrets, tag_name, app_name_git):
         print(e)
         raise Exception(e)
 
+
+def deployment(secrets, tag_name, app_name_git):
+    client = docker.from_env()
+    print('Deploying Container...')
+    try:
+        container = client.containers.run(image=tag_name,
+                                          detach=True,
+                                          ports={'8080/tcp': 8085},
+                                          name=app_name_git,
+                                          environment=secrets)
+        process = container.logs(stream=True, follow=False)
+        print('Container Deployed..')
+        for line in process:
+            print(line)
+    except BuildError as e:
+        print(e)
+        raise Exception(e)
